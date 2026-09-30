@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NBF · Gold & Silver — Bank Portal (Demo)</title>
+<style>
+  :root {
+    --bg: #f5f6f4; --panel: #fff; --ink: #14201c; --dim: #66736e; --line: #e3e7e4;
+    --side: #0c2a22; --side-ink: #c9d8d1; --side-dim: #74908a; --accent: #0f7a63; --accent-soft: #e3f3ee;
+    --gold: #b8892b; --gold-soft: #f8f0dd; --ok: #13795b; --ok-soft: #e2f4ec; --warn: #9a6400; --warn-soft: #fbf1dc;
+    --bad: #b3261e; --bad-soft: #fbe6e4; --info: #1d5fa8; --info-soft: #e5eefa; --silver: #6b7780; --silver-soft: #eef1f3; --r: 10px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.5 "Segoe UI", Inter, system-ui, sans-serif; color: var(--ink); background: var(--bg); }
+  a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+  code, .mono { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 12.5px; }
+  button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: #fff; padding: 7px 14px; color: var(--ink); }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.danger { background: #fff; color: var(--bad); border-color: #e9b8b4; }
+  button.demo { background: #fff8e8; color: #7a5a14; border: 1px dashed #d9b86a; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.small { padding: 4px 10px; font-size: 12.5px; }
+  input, select, textarea { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; width: 100%; }
+  input:disabled, select:disabled { background: #f3f5f4; color: var(--dim); }
+  label.field { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--dim); }
+  label.field > span:first-child { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+  .hint { font-size: 12px; color: var(--dim); }
+  .suffix { display: flex; align-items: center; gap: 6px; } .suffix span { color: var(--dim); font-size: 12.5px; white-space: nowrap; }
+
+  .login-wrap { min-height: 100vh; display: grid; grid-template-columns: 1.05fr 1fr; }
+  .login-brand { background: radial-gradient(1200px 600px at -10% -10%, #1b5a47 0%, var(--side) 58%); color: #e8efec; padding: 56px; display: flex; flex-direction: column; justify-content: space-between; }
+  .login-brand h1 { font-size: 34px; line-height: 1.15; margin: 18px 0 12px; letter-spacing: -.01em; }
+  .login-brand p { color: #a9c1b8; max-width: 460px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; letter-spacing: .02em; }
+  .logo i { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, #27a383, #0f7a63); display: inline-grid; place-items: center; color: #fff; font-style: normal; font-size: 12px; flex: none; }
+  .logo small { font-weight: 500; font-size: 11px; letter-spacing: .18em; color: var(--side-dim); text-transform: uppercase; }
+  .login-card { padding: 44px 64px; display: flex; flex-direction: column; justify-content: center; max-width: 640px; }
+  .login-card h2 { margin: 0 0 4px; font-size: 24px; }
+  .role-card { text-align: left; border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; background: #fff; width: 100%; margin: 16px 0 18px; }
+  .role-card:hover { border-color: var(--accent); } .role-card.sel { border-color: var(--accent); background: var(--accent-soft); }
+  .role-card b { display: block; font-size: 14px; } .role-card span { font-size: 12.5px; color: var(--dim); }
+  .feature-list { display: grid; gap: 10px; margin-top: 28px; }
+  .feature-list div { display: flex; gap: 10px; color: #c7d8d1; font-size: 13.5px; } .feature-list div::before { content: "◆"; color: #e5c068; }
+
+  .shell { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
+  aside { background: var(--side); color: var(--side-ink); padding: 18px 12px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  aside .logo { padding: 4px 8px 16px; color: #fff; font-size: 16px; line-height: 1.2; } aside .logo i { width: 26px; height: 26px; }
+  .nav-group { font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--side-dim); padding: 14px 10px 4px; }
+  .nav-item { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; border-radius: 8px; color: var(--side-ink); font-size: 13.5px; }
+  .nav-item:hover { background: rgba(255,255,255,.05); text-decoration: none; }
+  .nav-item.active { background: rgba(229,192,104,.14); color: #fff; box-shadow: inset 2px 0 0 #e5c068; }
+  .whoami { margin-top: auto; border-top: 1px solid #1c3d33; padding: 14px 8px 4px; font-size: 12.5px; }
+  .whoami .scopes { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0; }
+  .whoami .scopes span { font-size: 10.5px; padding: 1px 6px; border-radius: 5px; background: #173b31; color: #cfe0d9; }
+  main { min-width: 0; }
+  .topbar { display: flex; align-items: center; gap: 14px; padding: 12px 28px; background: #fff; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+  .bank-lock { display: flex; align-items: center; gap: 8px; font-weight: 600; } .bank-lock small { font-weight: 400; color: var(--dim); }
+  .demo-flag { margin-left: auto; font-size: 11px; letter-spacing: .12em; color: var(--gold); background: var(--gold-soft); border: 1px solid #ecd9a8; padding: 4px 10px; border-radius: 999px; font-weight: 600; }
+  .content { padding: 26px 28px 60px; max-width: 1200px; }
+  .page-head h1 { margin: 0; font-size: 22px; } .page-head p { margin: 4px 0 18px; color: var(--dim); max-width: 780px; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); margin-bottom: 16px; }
+  .panel-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 18px; border-bottom: 1px solid var(--line); }
+  .panel-h h3 { margin: 0; font-size: 14.5px; } .panel-h .sub { color: var(--dim); font-size: 12.5px; }
+  .panel-b { padding: 16px 18px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--dim); font-weight: 600; padding: 9px 14px; border-bottom: 1px solid var(--line); background: #fafbfa; white-space: nowrap; }
+  td { padding: 10px 14px; border-bottom: 1px solid #eef1ef; vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  tr.click { cursor: pointer; } tr.click:hover td { background: #f7faf9; } tr.sel td { background: #f1faf6; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; padding: 2px 9px; border-radius: 999px; background: #eef1ef; color: #45524d; white-space: nowrap; font-weight: 500; }
+  .pill.ok { background: var(--ok-soft); color: var(--ok); } .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .pill.bad { background: var(--bad-soft); color: var(--bad); } .pill.info { background: var(--info-soft); color: var(--info); }
+  .pill.gold { background: var(--gold-soft); color: #8a6415; } .pill.silver { background: var(--silver-soft); color: var(--silver); }
+  .grid { display: grid; gap: 14px; } .g2 { grid-template-columns: 1fr 1fr; } .g3 { grid-template-columns: repeat(3, 1fr); } .g4 { grid-template-columns: repeat(4, 1fr); }
+  .stat { background: #fff; border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; }
+  .stat .k { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+  .stat .v { font-size: 24px; font-weight: 650; margin-top: 4px; } .stat .d { font-size: 12px; color: var(--dim); }
+  .note { padding: 11px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
+  .note.info { background: var(--info-soft); color: #173f6d; } .note.warn { background: var(--warn-soft); color: #6d4700; }
+  .note.bad { background: var(--bad-soft); color: #7c1b15; } .note.ok { background: var(--ok-soft); color: #0d5a43; }
+  .note.gold { background: var(--gold-soft); color: #6d4d10; border: 1px solid #ecd9a8; }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; } .spacer { flex: 1; }
+  .radio { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; }
+  .radio.on { border-color: var(--accent); background: #f4fbf8; } .radio input { width: auto; margin-top: 3px; }
+  .check { display: flex; gap: 8px; align-items: center; } .check input { width: auto; }
+  .hook { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
+  .hook.missing { border-color: #eab3ae; background: #fffafa; }
+  .diff td:nth-child(2) { color: var(--bad); text-decoration: line-through; } .diff td:nth-child(3) { color: var(--ok); }
+  .stages { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .stage { padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--dim); background: #fff; }
+  .stage.done { background: var(--ok-soft); color: var(--ok); border-color: #bfe3d4; }
+  .stage.now { background: var(--warn-soft); color: var(--warn); border-color: #efd9a6; font-weight: 600; }
+  .toast { position: fixed; right: 22px; bottom: 22px; background: var(--side); color: #fff; padding: 12px 16px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.25); font-size: 13.5px; max-width: 440px; z-index: 50; animation: up .2s ease; }
+  @keyframes up { from { transform: translateY(10px); opacity: 0; } }
+  .modal-bg { position: fixed; inset: 0; background: rgba(10,20,17,.45); display: grid; place-items: center; z-index: 40; }
+  .modal { background: #fff; border-radius: 12px; width: min(560px, 92vw); padding: 22px; box-shadow: 0 20px 60px rgba(0,0,0,.3); } .modal h3 { margin: 0 0 6px; }
+  .mfa-box { display: flex; gap: 8px; margin: 14px 0; } .mfa-box input { width: 46px; text-align: center; font-size: 20px; font-weight: 600; }
+  .dim { color: var(--dim); } .nowrap { white-space: nowrap; } .right { text-align: right; }
+  .kv { display: grid; grid-template-columns: 200px 1fr; gap: 8px 16px; font-size: 13.5px; } .kv div:nth-child(odd) { color: var(--dim); }
+  .bar { height: 8px; border-radius: 999px; background: #eef1ef; overflow: hidden; } .bar i { display: block; height: 100%; background: var(--accent); }
+  .chart { display: flex; align-items: flex-end; gap: 6px; height: 120px; padding-top: 8px; }
+  .chart div { flex: 1; background: linear-gradient(180deg, #2a9a7f, var(--accent)); border-radius: 4px 4px 0 0; position: relative; }
+  .chart div span { position: absolute; bottom: -18px; left: 0; right: 0; text-align: center; font-size: 10.5px; color: var(--dim); }
+  .ro { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--dim); background: #f3f5f4; border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; min-width: 90px; }
+  .metal-tag { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+  .metal-tag i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .holding { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: #fff; }
+  .holding .g { font-size: 26px; font-weight: 650; } .holding .g small { font-size: 14px; color: var(--dim); font-weight: 500; }
+  .split { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 1100px) { .split { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="overlay"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════════
+   NBF · Gold & Silver — bank portal DEMO. Bank side only, one demo user.
+   Dummy data, held in memory; nothing is sent anywhere; a refresh resets it.
+   NUQI knows customers only by the bank's own reference — names stay at NBF.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+const BANK = { id: 'nbf', name: 'NBF', long: 'NBF · Gold & Silver', domain: 'nbf.bank.demo', color: '#0f7a63', plan: 'Enterprise', since: Date.now() - 53 * 864e5 };
+const CAP_LABEL = { view: 'view', configure: 'configure', keys: 'API keys', act: 'act on customers', approve: 'approve', team: 'manage team', audit: 'export audit' };
+const ROLES = {
+  bank_super:      { label: 'Bank super admin',   bypass: true,  caps: ['view', 'configure', 'keys', 'act', 'approve', 'team', 'audit'], summary: 'Every permission at NBF. Your changes apply immediately, without a second NBF approver — every bypass is recorded. Changes touching money or security still go to NUQI.' },
+  bank_admin:      { label: 'Bank administrator', caps: ['view', 'configure', 'keys', 'act', 'approve', 'team', 'audit'], summary: 'Settings, API keys and the team. Approves colleagues’ changes, never their own.' },
+  bank_ops:        { label: 'Operations',         caps: ['view', 'configure', 'act'], summary: 'Handles customers day to day and proposes changes.' },
+  bank_compliance: { label: 'Compliance',         caps: ['view', 'approve', 'audit'], summary: 'Reads everything, approves or rejects, exports the audit trail.' },
+  bank_viewer:     { label: 'Viewer',             caps: ['view'], summary: 'Read-only.' },
+};
+const PASSWORD = 'Demo#2026', DEMO_MFA = '246810';
+const DEMO_USER = { role: 'bank_super', name: 'Khalid Al Nuaimi', email: 'super.admin@nbf.bank.demo', password: PASSWORD, mfa: true };
+
+/* ── dummy data ─────────────────────────────────────────────────────────── */
+const now = Date.now(), H = 3600e3, D = 24 * H;
+const ago = (t) => { if (!t) return '—'; const s = (Date.now() - t) / 1000; if (s < 90) return 'just now'; if (s < 5400) return Math.round(s / 60) + ' min ago'; if (s < 129600) return Math.round(s / 3600) + ' h ago'; return Math.round(s / 86400) + ' d ago'; };
+const fmtDate = (t) => new Date(t).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+const fmtDay = (t) => new Date(t).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+const aed = (n) => Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' AED';
+const grams = (g) => Number(g).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 }) + ' g';
+
+/* Live customer rates (AED per gram) the portal values holdings at. */
+const RATES = { gold: { buy: 541.37, sell: 490.12, vendorAsk: 536.0118, vendorBid: 494.7265 }, silver: { buy: 6.52, sell: 5.84, vendorAsk: 6.3981, vendorBid: 5.9123 } };
+
+const S = {
+  user: null, pending: null, pick: false, route: 'home', selectedCustomer: null,
+  cfg: {
+    metals: ['gold', 'silver'], currencies: ['AED'],
+    features: { trade: true, sell: true, alerts: true, mart: true, gifting: true, sessionList: true, delivery: true, history: true },
+    limits: { min: 10000, max: 50000000, dailyBuy: 100000000, dailySell: 100000000 },
+    /* Basis points for commission legs; transaction fee in fils (flat) or bp. */
+    commission: {
+      gold:   { bankBuy: 75,  bankSell: 75,  nuqiBuy: 25, nuqiSell: 25, feeType: 'flat', feeFlat: 500, feePct: 0 },
+      silver: { bankBuy: 120, bankSell: 120, nuqiBuy: 40, nuqiSell: 40, feeType: 'flat', feeFlat: 200, feePct: 0 },
+    },
+    delivery: { vatPct: 5, mintingPerGram: 1500, transactionFee: 2500, deliveryCharge: 5000, freeAbove: 0 },
+    sessions: { maxPerUser: 3, atLimit: 'reject', idleMin: 15, absoluteH: 12, selfSignOut: true, revokeOthers: true },
+    payments: { enabled: true, provider: 'nbf-pay', model: 'hold_capture', hooks: { authorize: true, capture: true, void: true, refund: false, payout: true, webhook: true } },
+    integrations: { auth: 'tenant', kyc: 'tenant', rates: 'platform', trade: 'platform' },
+    clients: [
+      { id: 'cl_nbf_backend', kind: 'Server (NBF backend)', scopes: ['sessions:create', 'gold:price', 'gold:trade', 'users:read'], key: 'ck_…4312', rotated: now - 30 * D },
+      { id: 'cl_nbf_mobile', kind: 'Mobile SDK (iOS · Android · Huawei)', scopes: ['gold:price', 'gold:trade', 'portfolio:read', 'sessions:list'], key: 'ck_…8801', rotated: now - 12 * D },
+      { id: 'cl_nbf_widget', kind: 'Web widget', scopes: ['gold:price', 'portfolio:read'], key: 'ck_…1170', rotated: now - 60 * D },
+    ],
+  },
+  approvals: [], audit: [], seq: 100,
+};
+
+/* Customers — known to NUQI only by NBF's own reference. */
+const CUSTOMERS = [
+  ['NBF-CUST-100231', 42.5, 1250, 509.2, 5.71, 'active', 210], ['NBF-CUST-100874', 10, 0, 531.1, 0, 'active', 92],
+  ['NBF-CUST-101102', 125.25, 5200, 488.4, 5.2, 'active', 400], ['NBF-CUST-101433', 3.75, 150, 538.9, 6.1, 'active', 31],
+  ['NBF-CUST-101650', 0, 820, 0, 5.96, 'active', 70], ['NBF-CUST-102017', 250, 0, 472.6, 0, 'active', 520],
+  ['NBF-CUST-102288', 18.4, 300, 520.3, 5.88, 'active', 150], ['NBF-CUST-102519', 1.25, 0, 540.2, 0, 'dormant', 12],
+  ['NBF-CUST-102906', 64, 2000, 501.7, 5.5, 'active', 260], ['NBF-CUST-103144', 7.5, 90, 533.6, 6.2, 'active', 40],
+  ['NBF-CUST-103377', 0, 0, 0, 0, 'active', 3], ['NBF-CUST-103802', 33, 640, 515.8, 5.77, 'blocked', 120],
+].map(([ref, gold, silver, avgGold, avgSilver, status, d], i) => ({ ref, gold, silver, avgGold, avgSilver, status, joined: now - d * D, lastActive: now - (i * 5 + 1) * H, kyc: status === 'blocked' ? 'review' : 'passed' }));
+
+const SURFACES = [['iOS', 'secure_enclave'], ['Android', 'strongbox'], ['Huawei', 'huks'], ['Android', 'tee'], ['Web', null]];
+const SESSIONS = CUSTOMERS.flatMap((c, i) => {
+  const n = c.status === 'dormant' ? 1 : [2, 1, 3, 1, 1, 2, 1, 1, 2, 1, 1, 1][i];
+  return Array.from({ length: n }, (_, k) => {
+    const [surface, key] = SURFACES[(i + k) % SURFACES.length];
+    const live = c.status === 'active' && k < 2 && (i + k) % 4 !== 3;
+    return { id: 'sess_' + (9100 + i * 3 + k), customer: c.ref, surface, key, live, revoked: c.status === 'blocked' && k === 0, device: { iOS: 'iPhone 15 Pro', Android: 'Galaxy S24', Huawei: 'Mate 60 Pro', Web: 'Chrome · Windows' }[surface], seen: now - (i * 11 + k * 37 + 2) * 60e3, created: now - (i + k + 1) * 3 * H };
+  });
+});
+
+const ORDERS = [], PAYOPS = [];
+(function seedActivity() {
+  const states = ['completed', 'completed', 'completed', 'completed', 'completed', 'capture_pending', 'completed', 'reversed', 'completed', 'declined', 'completed', 'payout_pending', 'completed', 'needs_attention', 'completed', 'completed'];
+  for (let k = 0; k < 16; k++) {
+    const side = k % 4 === 3 ? 'sell' : 'buy'; const metal = k % 5 === 4 ? 'silver' : 'gold';
+    const g = metal === 'silver' ? [100, 250, 50][k % 3] : [1, 2.5, 5, 10, 0.5, 20, 3, 1.25][k % 8];
+    const perGram = RATES[metal][side]; const state = states[k]; const settled = !['reversed', 'declined'].includes(state);
+    const id = 'o_' + (7300 + k).toString(36).toUpperCase() + 'Q' + k;
+    ORDERS.push({ id, customer: CUSTOMERS[k % CUSTOMERS.length].ref, side, metal, grams: g, perGram, total: g * perGram, status: settled ? 'settled' : 'not settled', payment: side === 'sell' && state === 'completed' ? 'completed' : state, at: now - k * 5.3 * H });
+  }
+  ORDERS.forEach((o) => {
+    if (o.side === 'buy') {
+      PAYOPS.push({ order: o.id, kind: 'authorize', status: o.payment === 'declined' ? 'declined' : o.payment === 'reversed' ? 'reversed' : 'succeeded', attempts: 1, ref: o.payment === 'declined' ? '—' : 'H' + o.id.slice(2, 7) });
+      if (o.payment === 'completed') PAYOPS.push({ order: o.id, kind: 'capture', status: 'succeeded', attempts: 1, ref: 'C' + o.id.slice(2, 7) });
+      if (o.payment === 'capture_pending') PAYOPS.push({ order: o.id, kind: 'capture', status: 'pending', attempts: 2, ref: '—', next: 'in 1 min', err: 'bank answered 503' });
+      if (o.payment === 'needs_attention') PAYOPS.push({ order: o.id, kind: 'capture', status: 'abandoned', attempts: 1, ref: '—', err: 'bank rejected: hold expired' });
+      if (o.payment === 'reversed') PAYOPS.push({ order: o.id, kind: 'void', status: 'succeeded', attempts: 1, ref: 'V' + o.id.slice(2, 7) });
+    } else {
+      PAYOPS.push({ order: o.id, kind: 'payout', status: o.payment === 'completed' ? 'succeeded' : 'pending', attempts: o.payment === 'completed' ? 1 : 3, ref: o.payment === 'completed' ? 'P' + o.id.slice(2, 7) : '—', next: o.payment === 'completed' ? null : 'in 4 min', err: o.payment === 'completed' ? null : 'timeout after 5000ms' });
+    }
+  });
+})();
+const WEBHOOKS = ORDERS.slice(0, 9).map((o, i) => ({ id: 'evt_' + (5500 + i), type: 'order.settled', order: o.id, status: i === 3 ? 'failed' : i === 6 ? 'retrying' : 'delivered', attempts: i === 3 ? 12 : i === 6 ? 3 : 1, at: o.at + 5e3 }));
+
+S.team = [
+  { ...DEMO_USER, mfaOn: true, lastSeen: now, status: 'active' },
+  { role: 'bank_admin', name: 'Hamad Al Shamsi', email: 'admin@nbf.bank.demo', mfaOn: true, lastSeen: now - 3 * H, status: 'active' },
+  { role: 'bank_ops', name: 'Fatima Zahra', email: 'ops@nbf.bank.demo', mfaOn: true, lastSeen: now - 40 * 60e3, status: 'active' },
+  { role: 'bank_compliance', name: 'Rashid Kareem', email: 'compliance@nbf.bank.demo', mfaOn: true, lastSeen: now - 26 * H, status: 'active' },
+  { role: 'bank_viewer', name: 'Noor Hassan', email: 'viewer@nbf.bank.demo', mfaOn: false, lastSeen: now - 4 * D, status: 'active' },
+  { role: 'bank_ops', name: 'Samir Aziz', email: 'samir.aziz@nbf.bank.demo', mfaOn: false, lastSeen: 0, status: 'invited' },
+];
+const roleOf = (email) => S.team.find((m) => m.email === email)?.role;
+
+function audit(action, target, detail) {
+  S.audit.unshift({ at: Date.now(), actor: S.user ? S.user.email : 'system', role: S.user ? ROLES[S.user.role].label : 'system', side: 'bank', action, target, detail });
+}
+[
+  ['config.propose', 'NBF', 'Session policy: max 3 devices per customer', 'ops@nbf.bank.demo', 30 * H, 'bank'],
+  ['config.approve', 'NBF', 'Applied version 7 (session policy)', 'compliance@nbf.bank.demo', 29 * H, 'bank'],
+  ['client.key.rotate', 'NBF', 'cl_nbf_mobile — new key issued, old key valid 24 h', 'admin@nbf.bank.demo', 50 * H, 'bank'],
+  ['session.revoke_all', 'NBF-CUST-102288', 'Customer reported a lost phone — 3 sessions ended', 'ops@nbf.bank.demo', 3 * H, 'bank'],
+  ['customer.block', 'NBF-CUST-103802', 'Trading blocked pending KYC review', 'compliance@nbf.bank.demo', 20 * H, 'bank'],
+  ['payment.capture.rejected', ORDERS[13].id, 'Bank rejected capture: hold expired — needs a person', 'payments-worker', 70 * H, 'system'],
+  ['config.approve', 'NBF', 'Physical delivery charges updated', 'NUQI staff', 5 * D, 'nuqi'],
+  ['team.invite', 'NBF', 'Invited samir.aziz@nbf.bank.demo as Operations', 'admin@nbf.bank.demo', 3 * D, 'bank'],
+].forEach(([action, target, detail, actor, t, side]) => S.audit.push({ at: now - t, actor, role: side === 'nuqi' ? 'NUQI' : side === 'system' ? 'system' : ROLES[roleOf(actor)]?.label ?? 'Operations', side, action, target, detail }));
+S.audit.sort((a, b) => b.at - a.at);
+
+S.approvals = [
+  { id: 'apr_' + S.seq++, title: 'Raise daily buy limit to 2,000,000 AED', area: 'Order limits', by: 'ops@nbf.bank.demo', at: now - 26 * H, expires: now + 22 * H, status: 'pending', stages: ['bank', 'nuqi'], stage: 1, approvedBy: ['compliance@nbf.bank.demo'], apply: () => (S.cfg.limits.dailyBuy = 200000000), diff: [['limits.dailyBuy', '1,000,000.00 AED', '2,000,000.00 AED']] },
+  { id: 'apr_' + S.seq++, title: 'Idle timeout 10 minutes', area: 'Session policy', by: 'ops@nbf.bank.demo', at: now - 3 * H, expires: now + 45 * H, status: 'pending', stages: ['bank'], stage: 0, approvedBy: [], apply: () => (S.cfg.sessions.idleMin = 10), diff: [['sessions.idleMin', '15', '10']] },
+];
+
+/* ── helpers ────────────────────────────────────────────────────────────── */
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const role = () => ROLES[S.user.role];
+const can = (cap) => !!S.user && role().caps.includes(cap);
+const cfg = () => S.cfg;
+const pill = (tone, text) => `<span class="pill ${tone}">${esc(text)}</span>`;
+function btn(label, action, cap, cls = '', extra = '') {
+  const ok = !cap || can(cap);
+  return `<button class="${cls}" data-action="${action}" ${extra} ${ok ? '' : `disabled title="${esc(role().label)} cannot ${CAP_LABEL[cap]}"`}>${esc(label)}</button>`;
+}
+function toast(msg) { const el = document.createElement('div'); el.className = 'toast'; el.innerHTML = msg; document.body.appendChild(el); setTimeout(() => el.remove(), 4200); }
+const bypassNote = () => `<div class="note gold">⚡ <b>Bank super admin:</b> changes apply <b>immediately</b>, without a second NBF approver, and the bypass is recorded against your name. Changes to payments, integrations and limits still go to <b>NUQI</b> for co-approval.</div>`;
+const nuqiNote = () => `<div class="note info">🛡️ <b>NUQI co-approval.</b> This affects customers’ money or security, so after your approval it waits for NUQI before it applies.</div>`;
+function panel(title, sub, body, actions = '', flush = false) {
+  return `<section class="panel"><div class="panel-h"><div><h3>${title}</h3>${sub ? `<div class="sub">${sub}</div>` : ''}</div><div class="row">${actions}</div></div>${flush ? body : `<div class="panel-b">${body}</div>`}</section>`;
+}
+function table(cols, rows, onClick, selectedKey) {
+  return `<table><thead><tr>${cols.map((c) => `<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map((r) => `<tr class="${onClick ? 'click' : ''} ${selectedKey && r.key === selectedKey ? 'sel' : ''}" ${onClick ? `data-action="${onClick(r)}"` : ''}>${r.cells.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${cols.length}" class="dim" style="text-align:center;padding:26px">Nothing here yet.</td></tr>`}</tbody></table>`;
+}
+const PAY_TONE = { completed: 'ok', reversed: 'info', declined: '', capture_pending: 'warn', payout_pending: 'warn', needs_attention: 'bad' };
+const payPill = (s) => pill(PAY_TONE[s] ?? '', s.replace(/_/g, ' '));
+const metalTag = (m) => `<span class="metal-tag"><i style="background:${m === 'gold' ? '#d4a64a' : '#a9b3ba'}"></i>${m}</span>`;
+const bpPct = (bp) => (bp / 100).toFixed(2);
+const fils = (n) => (n / 100).toFixed(2);
+
+/* A change: applied now, or — if it touches money or security — sent to NUQI. */
+function submitChange(title, area, diff, apply, { sensitive = false } = {}) {
+  if (!sensitive) {
+    apply();
+    audit('config.apply.bypass', 'NBF', title + ' — applied without a second NBF approver');
+    toast(`⚡ <b>Applied immediately.</b> ${esc(title)}<br><span style="opacity:.75">Bypass recorded in the audit log.</span>`);
+  } else {
+    S.approvals.unshift({ id: 'apr_' + S.seq++, title, area, by: S.user.email, at: Date.now(), expires: Date.now() + 48 * H, status: 'pending', stages: ['bank', 'nuqi'], stage: 1, approvedBy: [S.user.email], bypassed: true, diff, apply });
+    audit('config.propose', 'NBF', title + ' — NBF approval bypassed; waiting for NUQI');
+    toast(`📝 <b>Sent to NUQI for co-approval.</b> ${esc(title)}<br><span style="opacity:.75">Your NBF approval was applied as a recorded bypass.</span>`);
+  }
+  render();
+}
+function decision(a) {
+  if (a.status !== 'pending') return { ok: false, why: '' };
+  if (a.stages[a.stage] === 'nuqi') return { ok: false, nuqi: true, why: 'Approved at NBF — now waiting for NUQI.' };
+  if (a.by === S.user.email) return { ok: false, why: 'You requested this change — someone else must approve it.' };
+  return { ok: true, why: 'You may approve this for NBF.' };
+}
+const pendingForMe = () => S.approvals.filter((a) => a.status === 'pending' && decision(a).ok).length;
+
+/* ── screens ────────────────────────────────────────────────────────────── */
+const GROUPS = ['Your bank', 'Setup', 'Commercial', 'Activity', 'You'];
+const SCREENS = {
+  home: { group: 'Your bank', label: 'Home', title: 'Home', lede: 'NBF’s gold and silver service today, and what is waiting for you.', render: Home },
+  users: { group: 'Your bank', label: 'Users', title: 'Users', lede: 'Every NBF customer using the gold and silver service — their holdings, their devices and their activity.', render: Users },
+  approvals: { group: 'Your bank', label: 'Approvals', title: 'Approvals', lede: 'Every change is recorded with who asked and who approved. Money and security changes are co-approved by NUQI.', render: Approvals, badge: () => S.approvals.filter((a) => a.status === 'pending').length },
+  team: { group: 'Your bank', label: 'Team', title: 'Team', lede: 'People at NBF who can use this portal, and their roles.', render: Team },
+  features: { group: 'Setup', label: 'Features', title: 'Features & entitlements', lede: 'Metals, currencies and feature flags in NBF’s contract with NUQI.', render: Features },
+  sessions_policy: { group: 'Setup', label: 'Session policy', title: 'Session policy', lede: 'How many devices a customer may use and how long a session lasts — within bounds NUQI enforces for every bank.', render: SessionPolicy },
+  payments: { group: 'Setup', label: 'Payment security', title: 'Payment security', lede: 'Whether NBF moves its customers’ money, what an authorisation does, and where each endpoint lives. An unsafe combination cannot be proposed.', render: PaymentSecurity },
+  integrations: { group: 'Setup', label: 'Integrations', title: 'Integrations', lede: 'NBF’s own auth check, KYC journey, rate feed and trading venue.', render: Integrations },
+  clients: { group: 'Setup', label: 'API clients & keys', title: 'API clients & keys', lede: 'What each of NBF’s apps may call, and the keys they use.', render: Clients },
+  commission: { group: 'Commercial', label: 'Commission & fees', title: 'Commission & fees', lede: 'How a customer price is built for gold and silver, and what physical delivery costs.', render: Commission },
+  limits: { group: 'Commercial', label: 'Order limits', title: 'Order limits', lede: 'Per-order and daily limits, enforced inside the settlement transaction.', render: Limits },
+  orders: { group: 'Activity', label: 'Orders', title: 'Orders', lede: 'Every order, its settlement and where its money stands.', render: Orders },
+  payops: { group: 'Activity', label: 'Payment operations', title: 'Payment operations', lede: 'Every call NUQI made to NBF’s payment system, and anything that needs a person.', render: PayOps, badge: () => PAYOPS.filter((p) => p.status === 'abandoned').length },
+  sessions: { group: 'Activity', label: 'Customer sessions', title: 'Customer sessions', lede: 'Every device signed in to NBF’s gold service. Liveness comes from the session store, not the database.', render: Sessions },
+  webhooks: { group: 'Activity', label: 'Webhooks', title: 'Webhooks', lede: 'Signed notifications NUQI sends to NBF, and their delivery.', render: Webhooks },
+  audit: { group: 'Activity', label: 'Audit log', title: 'Audit log', lede: 'Who did what, when — people at NBF, NUQI staff and NUQI’s systems.', render: Audit },
+  usage: { group: 'Activity', label: 'Usage', title: 'Usage', lede: 'Sessions, orders and volume over the last 7 days.', render: Usage },
+  account: { group: 'You', label: 'My account', title: 'My account', lede: 'Your role, your two-factor and where you are signed in.', render: Account },
+};
+
+function Home() {
+  const pending = S.approvals.filter((a) => a.status === 'pending');
+  const goldHeld = CUSTOMERS.reduce((s, c) => s + c.gold, 0), silverHeld = CUSTOMERS.reduce((s, c) => s + c.silver, 0);
+  return `<div class="note info">🏦 This is <b>NBF’s</b> portal. You see only NBF — never another bank’s customers, settings or data.</div>
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="stat"><div class="k">Customers</div><div class="v">${CUSTOMERS.length}</div><div class="d">${CUSTOMERS.filter((c) => c.status === 'active').length} active · <a href="#users">open users</a></div></div>
+    <div class="stat"><div class="k">Gold held by customers</div><div class="v">${grams(goldHeld)}</div><div class="d">${aed(goldHeld * RATES.gold.sell)} at today’s sell rate</div></div>
+    <div class="stat"><div class="k">Silver held by customers</div><div class="v">${grams(silverHeld)}</div><div class="d">${aed(silverHeld * RATES.silver.sell)} at today’s sell rate</div></div>
+    <div class="stat"><div class="k">Live sessions</div><div class="v">${SESSIONS.filter((s) => s.live).length}</div><div class="d">iOS · Android · Huawei · Web</div></div>
+  </div>
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="stat"><div class="k">Orders · 24 h</div><div class="v">${ORDERS.filter((o) => now - o.at < D).length}</div><div class="d">${aed(ORDERS.filter((o) => o.status === 'settled').reduce((s, o) => s + o.total, 0))} this week</div></div>
+    <div class="stat"><div class="k">Gold rate</div><div class="v" style="font-size:18px">${aed(RATES.gold.buy)}</div><div class="d">buy · sell ${aed(RATES.gold.sell)} per gram</div></div>
+    <div class="stat"><div class="k">Silver rate</div><div class="v" style="font-size:18px">${aed(RATES.silver.buy)}</div><div class="d">buy · sell ${aed(RATES.silver.sell)} per gram</div></div>
+    <div class="stat"><div class="k">Needs a person</div><div class="v" style="color:var(--bad)">${PAYOPS.filter((p) => p.status === 'abandoned').length + WEBHOOKS.filter((w) => w.status === 'failed').length}</div><div class="d"><a href="#payops">payments</a> · <a href="#webhooks">webhooks</a></div></div>
+  </div>
+  <div class="grid g2">
+    ${panel('Your contract with NUQI', 'Changed by NUQI on request', `<div class="kv"><div>Plan</div><div>${BANK.plan}</div><div>Metals</div><div>${cfg().metals.join(', ')}</div><div>Currencies</div><div>${cfg().currencies.join(', ')}</div><div>Bank payments</div><div>${cfg().payments.enabled ? pill('ok', 'on · hold → capture') : pill('', 'NUQI moves the money')}</div><div>Physical delivery</div><div>${cfg().features.delivery ? pill('ok', 'on') : pill('', 'off')}</div><div>Live since</div><div>${ago(BANK.since)}</div></div>`)}
+    ${panel('Waiting for approval', `${pending.length} pending`, table(['Change', 'Requested by', 'Stage'], pending.map((a) => ({ cells: [esc(a.title), esc(a.by), a.stages[a.stage] === 'bank' ? pill('info', 'NBF') : pill('warn', 'NUQI')] })), () => 'go:approvals'), '', true)}
+  </div>`;
+}
+
+/* The Users tab: every customer, their holdings and — on click — their devices. */
+function Users() {
+  const q = (S.userFilter ?? '').toLowerCase();
+  const list = CUSTOMERS.filter((c) => !q || c.ref.toLowerCase().includes(q));
+  const liveCount = (ref) => SESSIONS.filter((s) => s.customer === ref && s.live).length;
+  const sel = CUSTOMERS.find((c) => c.ref === S.selectedCustomer);
+  const statusPill = (c) => (c.status === 'active' ? pill('ok', 'active') : c.status === 'blocked' ? pill('bad', 'blocked') : pill('', 'dormant'));
+  const listPanel = panel('Customers', `${CUSTOMERS.length} customers · click one to see their devices and holdings`,
+    `<div class="panel-b" style="padding-bottom:0"><input id="user-filter" placeholder="Search by NBF customer reference…" value="${esc(S.userFilter ?? '')}"></div>` +
+    table(['Customer', 'Status', 'Gold', 'Silver', 'Live devices', 'Last active'], list.map((c) => ({ key: c.ref, cells: [`${c.ref}<div class="dim" style="font-size:12px">since ${fmtDay(c.joined)}</div>`, statusPill(c), `<span class="nowrap">${grams(c.gold)}</span>`, `<span class="nowrap">${grams(c.silver)}</span>`, liveCount(c.ref) ? pill('ok', liveCount(c.ref) + ' live') : 'none', `<span class="nowrap">${ago(c.lastActive)}</span>`] })), (r) => 'customer:' + r.key, S.selectedCustomer), '', true);
+  return `<div class="note info">🔒 NUQI knows each customer only by <b>NBF’s own reference</b>. Names, accounts and contact details stay in NBF’s systems — none of it is stored here.</div>
+    <div class="split">${listPanel}<div>${sel ? CustomerDetail(sel) : panel('Customer', '', '<div class="dim" style="padding:30px 0;text-align:center">Select a customer on the left to see their current holdings and signed-in devices.</div>')}</div></div>`;
+}
+function CustomerDetail(c) {
+  const sessions = SESSIONS.filter((s) => s.customer === c.ref);
+  const orders = ORDERS.filter((o) => o.customer === c.ref);
+  const goldVal = c.gold * RATES.gold.sell, silverVal = c.silver * RATES.silver.sell;
+  const pl = (held, avg, rate) => (held && avg ? held * (rate - avg) : 0);
+  const plTxt = (v) => `<span style="color:${v >= 0 ? 'var(--ok)' : 'var(--bad)'}">${v >= 0 ? '+' : ''}${aed(v)}</span>`;
+  const keyLabel = { secure_enclave: 'Secure Enclave', strongbox: 'StrongBox', huks: 'HUKS', tee: 'TEE' };
+  return panel(`<span class="mono">${c.ref}</span>`, `${c.status === 'blocked' ? 'Trading blocked — KYC review' : 'KYC passed'} · customer since ${fmtDay(c.joined)}`,
+    `<div class="grid g2" style="margin-bottom:14px">
+      <div class="holding"><div class="row"><span class="pill gold">Gold</span><span class="spacer"></span><span class="dim" style="font-size:12px">avg cost ${c.avgGold ? aed(c.avgGold) + '/g' : '—'}</span></div><div class="g" style="margin-top:8px">${grams(c.gold)}</div><div class="dim">Worth ${aed(goldVal)} at ${aed(RATES.gold.sell)}/g</div><div style="font-size:12.5px;margin-top:4px">Unrealised ${plTxt(pl(c.gold, c.avgGold, RATES.gold.sell))}</div></div>
+      <div class="holding"><div class="row"><span class="pill silver">Silver</span><span class="spacer"></span><span class="dim" style="font-size:12px">avg cost ${c.avgSilver ? aed(c.avgSilver) + '/g' : '—'}</span></div><div class="g" style="margin-top:8px">${grams(c.silver)}</div><div class="dim">Worth ${aed(silverVal)} at ${aed(RATES.silver.sell)}/g</div><div style="font-size:12.5px;margin-top:4px">Unrealised ${plTxt(pl(c.silver, c.avgSilver, RATES.silver.sell))}</div></div>
+    </div>
+    <div class="note ok" style="margin-bottom:14px">Total portfolio value <b>${aed(goldVal + silverVal)}</b> — valued at today’s sell rates, the price NBF would pay to buy it back.</div>
+    <h4 style="margin:4px 0 8px">Current sessions <span class="dim" style="font-weight:400">· ${sessions.filter((s) => s.live).length} live of ${sessions.length}</span></h4>
+    <div class="panel" style="margin-bottom:14px">${table(['Device', 'Key storage', 'State', 'Last seen', ''], sessions.map((s) => ({ cells: [`${s.device}<div class="dim" style="font-size:12px">${s.surface} · ${s.id}</div>`, s.key ? pill('ok', keyLabel[s.key]) : pill('', 'browser'), s.revoked ? pill('bad', 'revoked') : s.live ? pill('ok', 'live') : pill('', 'expired'), `<span class="nowrap">${ago(s.seen)}</span>`, s.live && !s.revoked ? btn('Revoke', 'revoke:' + s.id, 'act', 'small danger') : ''] })))}</div>
+    <h4 style="margin:4px 0 8px">Recent orders</h4>
+    <div class="panel" style="margin-bottom:0">${table(['Order', 'Side', 'Metal', 'Grams', 'Total', 'Money'], orders.map((o) => ({ cells: [o.id, o.side === 'buy' ? pill('info', 'buy') : pill('gold', 'sell'), metalTag(o.metal), o.grams, `<span class="nowrap">${aed(o.total)}</span>`, payPill(o.payment)] })))}</div>`,
+    `${sessions.some((s) => s.live) ? btn('Sign out everywhere', 'revokeall:' + c.ref, 'act', 'small danger') : ''} ${c.status === 'blocked' ? btn('Unblock trading', 'unblock:' + c.ref, 'act', 'small') : btn('Block trading', 'block:' + c.ref, 'act', 'small')}`);
+}
+
+function Approvals() {
+  const rowFor = (a) => {
+    const d = decision(a); const final = a.stage === a.stages.length - 1;
+    const label = (s) => (s === 'bank' ? 'NBF checker' : 'NUQI');
+    const stages = `<div class="stages">${a.stages.map((s, i) => `<span class="stage ${a.status === 'approved' || i < a.stage ? 'done' : a.status === 'pending' && i === a.stage ? 'now' : ''}">${i + 1} · ${label(s)}${a.status === 'approved' || i < a.stage ? ' ✓' : ''}${i === 0 && a.bypassed ? ' (bypass)' : ''}</span>`).join('<span class="dim">→</span>')}</div>`;
+    return `<div class="panel"><div class="panel-h"><div><h3>${esc(a.title)}</h3><div class="sub">${esc(a.area)} · requested by <span class="mono">${esc(a.by)}</span> · ${ago(a.at)}</div></div>
+      <div class="row">${stages}${a.status === 'pending' ? pill('warn', 'expires in ' + Math.max(1, Math.round((a.expires - Date.now()) / H)) + ' h') : a.status === 'approved' ? pill('ok', 'approved & applied') : pill('', 'rejected')}</div></div>
+      <table class="diff"><thead><tr><th>Setting</th><th>Before</th><th>After</th></tr></thead><tbody>${a.diff.map((x) => `<tr><td>${esc(x[0])}</td><td>${esc(x[1])}</td><td>${esc(x[2])}</td></tr>`).join('')}</tbody></table>
+      ${a.status === 'pending' ? `<div class="panel-b row" style="border-top:1px solid var(--line)"><span class="dim" style="font-size:12.5px">${esc(d.why)}</span><span class="spacer"></span>
+        ${d.nuqi ? `<button class="demo small" data-action="nuqi-approve:${a.id}" title="Demo only — in production a NUQI operator approves this in NUQI’s console">Demo: simulate NUQI approval</button>` : `<button class="danger small" data-action="reject:${a.id}" ${d.ok ? '' : 'disabled'}>Reject</button><button class="primary small" data-action="approve:${a.id}" ${d.ok ? '' : 'disabled'}>${final ? 'Approve & apply' : 'Approve — send to NUQI'}</button>`}</div>` : ''}</div>`;
+  };
+  return `<div class="note info">🛡️ <b>Four eyes at NBF, and NUQI for anything touching money or security.</b> A colleague approves first; payment, integration and limit changes then go to NUQI. As super admin your own NBF approval is a recorded bypass.</div>` + (S.approvals.length ? S.approvals.map(rowFor).join('') : panel('Queue', '', '<div class="dim">Nothing waiting.</div>'));
+}
+
+function Team() {
+  return panel('People at NBF', `${S.team.length} accounts · only NBF staff`, table(['Name', 'Role', 'Two-factor', 'Last seen', 'Status', ''], S.team.map((m) => ({ cells: [`${esc(m.name)}<div class="dim">${esc(m.email)}</div>`, pill(m.role === 'bank_super' ? 'gold' : m.role === 'bank_viewer' ? '' : 'info', ROLES[m.role].label), m.mfaOn ? pill('ok', 'enrolled') : m.role === 'bank_viewer' ? pill('', 'optional') : pill('warn', 'not enrolled'), m.status === 'invited' ? 'never' : ago(m.lastSeen), m.status === 'active' ? pill('ok', 'active') : m.status === 'invited' ? pill('info', 'invited') : pill('', 'disabled'),
+    m.email === S.user.email ? '<span class="dim">you</span>' : `<div class="row" style="justify-content:flex-end">${btn('Change role', 'toast:Role changed — recorded in the audit log (demo).', 'team', 'small')} ${m.status === 'active' ? btn('Disable', 'disable:' + m.email, 'team', 'small danger') : ''}</div>`] }))), btn('+ Invite a colleague', 'invite', 'team', 'primary'), true)
+    + `<div class="grid g2">${panel('Roles at NBF', '', table(['Role', 'Can'], Object.keys(ROLES).map((r) => ({ cells: [ROLES[r].label, esc(ROLES[r].summary)] }))), '', true)}
+      ${panel('Rules', '', `<ul style="margin:0 0 0 18px;display:grid;gap:6px"><li>Everyone who can change something uses <b>two-factor</b>.</li><li>A change is approved by a <b>different person</b> — the super admin’s bypass is always recorded.</li><li>Only NBF staff appear here; NUQI staff are not listed and cannot be added.</li><li>Every sign-in and change is in the audit log.</li></ul>`)}</div>`;
+}
+
+function Features() {
+  const c = cfg();
+  return `<div class="note info">📄 <b>Set by NBF’s contract with NUQI.</b> Metals, currencies and feature flags are visible here and changed by NUQI on request.</div><div class="grid g2">
+    ${panel('Metals & currencies', 'What NBF’s customers can trade', `<div class="grid g2"><div><b>Metals</b>${['gold', 'silver', 'platinum'].map((m) => `<label class="check" style="margin-top:6px"><input type="checkbox" ${c.metals.includes(m) ? 'checked' : ''} disabled> ${m}</label>`).join('')}</div><div><b>Currencies</b>${['AED', 'USD', 'SAR'].map((m) => `<label class="check" style="margin-top:6px"><input type="checkbox" ${c.currencies.includes(m) ? 'checked' : ''} disabled> ${m}</label>`).join('')}</div></div>`)}
+    ${panel('Feature flags', 'Switched on in the contract', `<div class="grid g2">${Object.entries(c.features).map(([k, v]) => `<label class="check"><input type="checkbox" ${v ? 'checked' : ''} disabled> ${k}</label>`).join('')}</div>`)}
+  </div><div class="row">${btn('Ask NUQI for a change', 'toast:Request sent to your NUQI account manager (demo).', null)}</div>`;
+}
+
+function SessionPolicy() {
+  const p = cfg().sessions;
+  return bypassNote() + `<div class="note info"><b>NUQI owns the mechanism</b> — device-bound keys, renewal, revocation, crash recovery — the same for every bank. <b>NBF owns the policy</b> below, within NUQI’s bounds.</div>
+  <div class="grid g2">
+  ${panel('Devices per customer', '', `<label class="field"><span>Maximum sessions</span><select id="sp-max">${['unlimited', 1, 2, 3, 5, 10].map((v) => `<option ${String(p.maxPerUser) === String(v) ? 'selected' : ''}>${v}</option>`).join('')}</select><span class="hint">Bounds: 1 – 50, or unlimited.</span></label>
+    <label class="field" style="margin-top:12px"><span>At the limit</span><select id="sp-at"><option value="reject" ${p.atLimit === 'reject' ? 'selected' : ''}>Refuse the new sign-in</option><option value="reject_with_list" ${p.atLimit === 'reject_with_list' ? 'selected' : ''}>Refuse and show the customer their devices</option><option value="evict_lru" ${p.atLimit === 'evict_lru' ? 'selected' : ''}>Sign out the least recently used device</option></select></label>`)}
+  ${panel('Lifetimes', 'Can only be tightened below NUQI’s own', `<label class="field"><span>Idle timeout (minutes)</span><input id="sp-idle" value="${p.idleMin}"><span class="hint">5 – 15 · NUQI’s maximum is 15</span></label><label class="field" style="margin-top:12px"><span>Absolute lifetime (hours)</span><input id="sp-abs" value="${p.absoluteH}"><span class="hint">1 – 12</span></label>`)}
+  ${panel('What customers can do from their own phone', '', `<label class="check"><input type="checkbox" id="sp-self" ${p.selfSignOut ? 'checked' : ''}> Sign out this device</label><label class="check" style="margin-top:8px"><input type="checkbox" id="sp-others" ${p.revokeOthers ? 'checked' : ''}> Sign out their other devices <span class="pill warn">needs a recent login</span></label>`)}
+  ${panel('Never a bank setting', '', `<div class="dim">Revocation by NBF or by NUQI always works. Session keys never leave the device. A session is refused the moment it is revoked.</div>`)}
+  </div><div class="row">${btn('Apply now', 'session-save', 'configure', 'primary')}</div>`;
+}
+
+const OPS = ['authorize', 'capture', 'void', 'refund', 'payout'];
+const OP_LABEL = { authorize: 'Authorise', capture: 'Capture', void: 'Void', refund: 'Refund', payout: 'Payout' };
+function needOf(model, op) { if (op === 'authorize') return 'required'; if (op === 'payout') return 'optional'; if (model === 'hold_capture') return op === 'refund' ? 'unused' : 'required'; return op === 'refund' ? 'required' : 'unused'; }
+function missingOps(p) { return p.enabled ? OPS.filter((op) => needOf(p.model, op) === 'required' && !p.hooks[op]) : []; }
+function PaymentSecurity() {
+  if (!S.payDraft) S.payDraft = JSON.parse(JSON.stringify(cfg().payments));
+  const p = S.payDraft; const missing = missingOps(p);
+  const status = !p.enabled ? '' : missing.length ? `<div class="note bad" style="margin:12px 0 0">${missing.map((op) => `❌ Cannot enable bank payments. Missing required ${op === 'void' || op === 'refund' ? 'reversal operation' : 'operation'}: <b>${op.toUpperCase()}</b>.`).join('<br>')}</div>` : `<div class="note ok" style="margin:12px 0 0">✓ Every payment NBF authorises can be completed and reversed.</div>`;
+  const needPill = (n) => (n === 'required' ? pill('warn', 'required') : n === 'optional' ? pill('info', 'optional') : pill('', 'not used by this model'));
+  const hint = { authorize: 'Asked before anything is hedged, for every buy. No answer refuses the order and queues a reversal.', capture: 'Turns a settled order’s hold into a debit. Retried until NBF confirms.', void: 'Releases a hold whose order failed — only once the order provably cannot settle.', refund: 'Returns money a direct debit took for an order that failed.', payout: 'Pays a sale’s proceeds. Without it, sells are refused before any metal is sold.' };
+  return nuqiNote() + panel('Bank payments', 'Whether NBF moves its customers’ money for each order', `
+      <label class="radio ${!p.enabled ? 'on' : ''}"><input type="radio" name="pe" data-pay="off" ${!p.enabled ? 'checked' : ''}><div><b>Off — platform payments</b> ${pill('ok', 'platform default')}<div class="hint">NBF is not asked about any order.</div></div></label>
+      <label class="radio ${p.enabled ? 'on' : ''}"><input type="radio" name="pe" data-pay="on" ${p.enabled ? 'checked' : ''}><div><b>On — NBF authorises every buy before it is hedged</b><div class="hint">Then captures or reverses it, and pays out every sale.</div></div></label>${status}`) +
+    `<div class="grid g2">` +
+    panel('Payment model', 'Decides how a failed trade is undone', `
+      <label class="radio ${p.model === 'hold_capture' ? 'on' : ''}"><input type="radio" name="pm" data-model="hold_capture" ${p.model === 'hold_capture' ? 'checked' : ''}><div><b>Hold → Capture</b> ${pill('ok', 'default · safer')}<div class="hint">Hold at authorise, capture at settlement, void on failure.</div></div></label>
+      <label class="radio ${p.model === 'direct_debit' ? 'on' : ''}"><input type="radio" name="pm" data-model="direct_debit" ${p.model === 'direct_debit' ? 'checked' : ''}><div><b>Direct debit</b><div class="hint">Debit at authorise, refund on failure.</div></div></label>`) +
+    panel('Bank authentication', 'How NUQI proves itself to NBF', table(['Method', 'Status'], [['HMAC-SHA256 signature', pill('ok', 'available · in use')], ['OAuth 2.0 client credentials', pill('warn', 'buildable')], ['Mutual TLS (mTLS)', pill('warn', 'buildable')], ['JWT from NBF’s app', pill('', 'separate integration')]].map((r) => ({ cells: r }))), '', true) +
+    `</div>` +
+    panel('Payment operations', 'One signed endpoint per operation at NBF', OPS.map((op) => {
+      const n = needOf(p.model, op); const miss = p.enabled && n === 'required' && !p.hooks[op];
+      return `<div class="hook ${miss ? 'missing' : ''}"><div class="row"><b>${OP_LABEL[op]}</b> ${needPill(n)} <span class="spacer"></span><label class="check"><input type="checkbox" data-hook="${op}" ${p.hooks[op] ? 'checked' : ''}> configured</label></div><div class="hint" style="margin-top:4px">${hint[op]}</div>
+        ${p.hooks[op] ? `<div class="grid g3" style="margin-top:10px"><label class="field"><span>URL</span><input class="mono" value="https://pay.nbf.bank.example/${op}"></label><label class="field"><span>Timeout (ms)</span><input value="3000"></label><label class="field"><span>Credential handle</span><input class="mono" value="kms-nbf-${op.slice(0, 3)}••••• (18 chars)" disabled></label></div>` : ''}</div>`;
+    }).join('')) +
+    panel('Security requirements', 'The same for every bank. Always on; not configurable.', table(['', 'Requirement'], [['Idempotency', 'Every call to NBF carries a key identical on every retry.'], ['Recorded before asked', 'A crash cannot lose a hold or a payout.'], ['Fail-closed', 'No answer from NBF refuses the order.'], ['Safe reversal', 'Never reverses an order that settled.'], ['Audit', 'Every call and answer is logged.'], ['Amount from the server', 'No app sends an amount, account or customer id.']].map((r) => ({ cells: [pill('ok', 'always on') + ' ' + r[0], r[1]] }))), '', true) +
+    `<div class="row">${missing.length ? `<button class="primary" disabled>Send to NUQI</button><span class="dim">Blocked: ${missing.map((m) => m.toUpperCase()).join(', ')} missing.</span>` : btn('Send to NUQI', 'pay-save', 'configure', 'primary')}</div>`;
+}
+
+function Integrations() {
+  const i = cfg().integrations;
+  const mode = (k, label, hint) => `<label class="field"><span>${label}</span><select data-int="${k}"><option value="platform" ${i[k] === 'platform' ? 'selected' : ''}>platform — NUQI’s</option><option value="tenant" ${i[k] === 'tenant' ? 'selected' : ''}>NBF’s own</option></select><span class="hint">${hint}</span></label>`;
+  return nuqiNote() + `<div class="grid g2">
+    ${panel('Auth re-check', 'Before a session is created', mode('auth', 'Mode', 'NBF confirms the customer may still hold a session.') + `<div class="note ok" style="margin:12px 0 0">Fail-closed: an unreachable NBF verifier refuses the session.</div>`)}
+    ${panel('Know-your-customer', 'NBF’s own journey', mode('kyc', 'Mode', 'Scopes are withheld until NBF says KYC passed.'))}
+    ${panel('Rate feed', 'Where prices come from', mode('rates', 'Mode', 'NBF may price from its own feed; it never silently falls back to NUQI’s.'))}
+    ${panel('Trading venue', 'Who takes the other side', mode('trade', 'Mode', 'NBF may clear with its own bullion desk.'))}
+  </div><div class="note info">Payments are on <a href="#payments">Payment security →</a></div><div class="row">${btn('Send to NUQI', 'int-save', 'configure', 'primary')}</div>`;
+}
+
+function Clients() {
+  return panel('API clients', 'Each app has its own client, scopes and key', table(['Client', 'Kind', 'Scopes', 'Key', ''], cfg().clients.map((cl, i) => ({ cells: [cl.id, cl.kind, cl.scopes.map((s) => `<span class="pill" style="margin:1px">${s}</span>`).join(' '), `${cl.key}<div class="dim" style="font-size:12px">rotated ${ago(cl.rotated)}</div>`, btn('Rotate key', 'rotate:' + i, 'keys', 'small')] }))), '', true)
+    + `<div class="note info">🔑 A rotated key is shown <b>once</b>. The old key keeps working for 24 hours so NBF can deploy without downtime. New clients and scopes are set up by NUQI.</div>`;
+}
+
+/* Commission & fees: rates for gold and silver (NUQI's legs shown, read-only), a
+   per-metal transaction fee, and the physical delivery charges. */
+function feeOf(q, total) { return q.feeType === 'flat' ? q.feeFlat / 100 : (total * q.feePct) / 10000; }
+function Commission() {
+  const c = cfg().commission; const d = cfg().delivery;
+  const rateRow = (m) => {
+    const q = c[m];
+    return { cells: [metalTag(m),
+      `<div class="suffix"><input style="width:84px" data-cm="${m}.bankBuy" value="${bpPct(q.bankBuy)}"><span>%</span></div>`,
+      `<div class="suffix"><input style="width:84px" data-cm="${m}.bankSell" value="${bpPct(q.bankSell)}"><span>%</span></div>`,
+      `<span class="ro" title="Agreed in the contract with NUQI">🔒 ${bpPct(q.nuqiBuy)}%</span>`,
+      `<span class="ro" title="Agreed in the contract with NUQI">🔒 ${bpPct(q.nuqiSell)}%</span>`,
+      `<div class="suffix"><select style="width:auto" data-cm="${m}.feeType"><option value="flat" ${q.feeType === 'flat' ? 'selected' : ''}>AED</option><option value="pct" ${q.feeType === 'pct' ? 'selected' : ''}>%</option></select><input style="width:84px" data-cm="${m}.fee" value="${q.feeType === 'flat' ? fils(q.feeFlat) : bpPct(q.feePct)}"><span>per order</span></div>`] };
+  };
+  // Worked example: buying 10 g of gold.
+  const ex = 10, vend = RATES.gold.vendorAsk, q = c.gold;
+  const bankLeg = vend * (q.bankBuy / 10000), nuqiLeg = vend * (q.nuqiBuy / 10000);
+  const perGram = vend + bankLeg + nuqiLeg, metalTotal = perGram * ex, txFee = feeOf(q, metalTotal);
+  // Delivery example: a 10 g bar delivered.
+  const mint = (d.mintingPerGram / 100) * ex, dTx = d.transactionFee / 100, dDel = d.deliveryCharge / 100;
+  const charges = mint + dTx + dDel, vat = (charges * d.vatPct) / 100;
+  return bypassNote() +
+    panel('Gold & silver rates', 'Customer price = market price + NBF commission + NUQI commission. A transaction fee is added per order.',
+      `<table><thead><tr><th>Metal</th><th>NBF · buy</th><th>NBF · sell</th><th>NUQI · buy</th><th>NUQI · sell</th><th>Transaction fee</th></tr></thead><tbody>${['gold', 'silver'].map(rateRow).map((r) => `<tr>${r.cells.map((x) => `<td>${x}</td>`).join('')}</tr>`).join('')}</tbody></table>
+       <div class="panel-b" style="border-top:1px solid var(--line)"><div class="hint">🔒 NUQI’s commission is shown for transparency and is agreed in NBF’s contract with NUQI — change it through your NUQI account manager. NBF’s commission and transaction fee are yours to set.</div></div>`,
+      btn('Apply now', 'rates-save', 'configure', 'primary'), true) +
+    `<div class="grid g2">` +
+    panel('Worked example — buying 10 g of gold', 'At today’s market price', `<div class="kv">
+      <div>Market ask</div><div>${aed(vend)} /g</div>
+      <div>+ NBF commission (${bpPct(q.bankBuy)}%)</div><div>${aed(bankLeg)} /g</div>
+      <div>+ NUQI commission (${bpPct(q.nuqiBuy)}%)</div><div>${aed(nuqiLeg)} /g</div>
+      <div><b>Customer rate</b></div><div><b>${aed(perGram)} /g</b></div>
+      <div>× 10 g</div><div>${aed(metalTotal)}</div>
+      <div>+ Transaction fee</div><div>${aed(txFee)}</div>
+      <div><b>Customer pays</b></div><div><b>${aed(metalTotal + txFee)}</b></div></div>`) +
+    panel('Physical delivery', 'Charges when a customer takes delivery of metal as a bar or coin', `
+      <div class="grid g2">
+        <label class="field"><span>VAT</span><div class="suffix"><input id="dl-vat" value="${d.vatPct}"><span>%</span></div><span class="hint">Applied to the charges below.</span></label>
+        <label class="field"><span>Minting charges</span><div class="suffix"><input id="dl-mint" value="${fils(d.mintingPerGram)}"><span>AED per gram</span></div><span class="hint">Making the bar or coin.</span></label>
+        <label class="field"><span>Transaction fee</span><div class="suffix"><input id="dl-tx" value="${fils(d.transactionFee)}"><span>AED per delivery</span></div><span class="hint">Processing the delivery request.</span></label>
+        <label class="field"><span>Delivery charges</span><div class="suffix"><input id="dl-del" value="${fils(d.deliveryCharge)}"><span>AED per shipment</span></div><span class="hint">Insured courier to the customer.</span></label>
+      </div>
+      <div style="border-top:1px solid var(--line);margin:14px -18px 0;padding:12px 18px 0"><b style="font-size:13px">Example — a 10 g gold bar delivered</b>
+      <div class="kv" style="margin-top:8px"><div>Minting (10 g × ${aed(d.mintingPerGram / 100)})</div><div>${aed(mint)}</div><div>Transaction fee</div><div>${aed(dTx)}</div><div>Delivery charges</div><div>${aed(dDel)}</div><div>VAT ${d.vatPct}% on charges</div><div>${aed(vat)}</div><div><b>Customer pays for delivery</b></div><div><b>${aed(charges + vat)}</b></div></div></div>`,
+      btn('Apply now', 'delivery-save', 'configure', 'primary')) +
+    `</div>`;
+}
+
+function Limits() {
+  const l = cfg().limits;
+  const f = (id, label, v, hint) => `<label class="field"><span>${label}</span><input id="${id}" value="${(v / 100).toLocaleString('en-US')}"><span class="hint">${hint}</span></label>`;
+  return nuqiNote() + panel('Limits', 'AED · enforced inside the settlement transaction, whatever the app does', `<div class="grid g2">${f('lim-min', 'Smallest order', l.min, 'Below this an order is refused.')}${f('lim-max', 'Largest order', l.max, 'Per single order.')}${f('lim-db', 'Daily buys per customer', l.dailyBuy, 'Rolling 24 hours.')}${f('lim-ds', 'Daily sells per customer', l.dailySell, 'Rolling 24 hours.')}</div>`, btn('Send to NUQI', 'limits-save', 'configure', 'primary'));
+}
+
+function Orders() {
+  return panel('Orders', `${ORDERS.length} orders`, table(['Order', 'Customer', 'Side', 'Metal', 'Grams', 'Price / g', 'Total', 'Order', 'Money', 'When'], ORDERS.map((o) => ({ cells: [o.id, `<a href="#users" style="color:inherit;text-decoration:none" data-action="customer:${o.customer}">${o.customer}</a>`, o.side === 'buy' ? pill('info', 'buy') : pill('gold', 'sell'), metalTag(o.metal), o.grams, o.perGram.toFixed(2), `<span class="nowrap">${aed(o.total)}</span>`, o.status === 'settled' ? pill('ok', 'settled') : pill('', 'not settled'), payPill(o.payment), `<span class="nowrap">${fmtDate(o.at)}</span>`] }))), '', true);
+}
+
+function PayOps() {
+  const att = PAYOPS.filter((p) => p.status === 'abandoned');
+  return (att.length ? `<div class="note bad">⚠️ <b>${att.length} payment operation needs a person.</b> NBF rejected a capture; nothing will retry it automatically.</div>` : '') +
+    `<div class="grid g4" style="margin-bottom:16px">${[['Succeeded', PAYOPS.filter((p) => p.status === 'succeeded').length, 'ok'], ['Retrying', PAYOPS.filter((p) => p.status === 'pending').length, 'warn'], ['Needs attention', att.length, 'bad'], ['Declined', PAYOPS.filter((p) => p.status === 'declined').length, '']].map(([k, v, t]) => `<div class="stat"><div class="k">${k}</div><div class="v" style="color:var(--${t || 'ink'})">${v}</div></div>`).join('')}</div>` +
+    panel('Calls to NBF', 'Each is recorded before NBF is asked, and retried under the same idempotency key', table(['Order', 'Operation', 'Status', 'Attempts', 'NBF ref', 'Detail', ''], PAYOPS.map((p) => ({ cells: [p.order, p.kind, p.status === 'succeeded' ? pill('ok', 'succeeded') : p.status === 'pending' ? pill('warn', 'retrying ' + (p.next ?? '')) : p.status === 'abandoned' ? pill('bad', 'needs attention') : p.status === 'reversed' ? pill('info', 'reversed') : pill('', p.status), p.attempts, p.ref, esc(p.err ?? ''), p.status === 'abandoned' ? btn('Mark resolved', 'resolve:' + p.order, 'act', 'small') : ''] }))), '', true);
+}
+
+function Sessions() {
+  return panel('Customer sessions', `${SESSIONS.filter((s) => s.live).length} live of ${SESSIONS.length}`, table(['Session', 'Customer', 'Device', 'State', 'Last seen', 'Started', ''], SESSIONS.map((s) => ({ cells: [s.id, `<a href="#users" style="color:inherit;text-decoration:none" data-action="customer:${s.customer}">${s.customer}</a>`, `${s.device}<div class="dim" style="font-size:12px">${s.surface}</div>`, s.revoked ? pill('bad', 'revoked') : s.live ? pill('ok', 'live') : pill('', 'expired'), ago(s.seen), ago(s.created), s.live && !s.revoked ? btn('Revoke', 'revoke:' + s.id, 'act', 'small danger') : ''] }))), btn('Sign out a customer everywhere', 'revokeall-ask', 'act'), true);
+}
+
+function Webhooks() {
+  return panel('Deliveries', 'order.settled events, HMAC-signed', table(['Event', 'Type', 'Order', 'Status', 'Attempts', 'When', ''], WEBHOOKS.map((w) => ({ cells: [w.id, w.type, w.order, w.status === 'delivered' ? pill('ok', 'delivered') : w.status === 'retrying' ? pill('warn', 'retrying') : pill('bad', 'failed'), w.attempts, ago(w.at), w.status === 'failed' ? btn('Replay', 'replay:' + w.id, 'act', 'small') : ''] }))), '', true);
+}
+
+function Audit() {
+  return `<div class="note info">Only NBF’s entries. Actions NUQI staff took on NBF are listed, attributed to “NUQI staff”.</div>` +
+    panel('Audit log', `${S.audit.length} entries · newest first`, table(['When', 'Who', 'Role', 'Action', 'Target', 'Detail'], S.audit.map((a) => ({ cells: [`<span class="nowrap">${fmtDate(a.at)}</span>`, a.side === 'nuqi' ? 'NUQI staff' : esc(a.actor), pill(a.role === 'Bank super admin' ? 'gold' : a.side === 'system' ? '' : a.side === 'nuqi' ? 'info' : 'ok', a.role), esc(a.action), esc(a.target), esc(a.detail)] }))), btn('Export CSV', 'export', 'audit'), true);
+}
+
+function Usage() {
+  const series = [92, 110, 104, 131, 125, 150, 142];
+  return `<div class="grid g3" style="margin-bottom:16px"><div class="stat"><div class="k">Sessions created</div><div class="v">854</div><div class="d">+12% vs last week</div></div><div class="stat"><div class="k">Orders settled</div><div class="v">312</div><div class="d">2 failed · 0.6%</div></div><div class="stat"><div class="k">Volume</div><div class="v">1.84M</div><div class="d">AED, buys and sells</div></div></div>` +
+    panel('Sessions per day', 'Last 7 days', `<div class="chart">${series.map((v, i) => `<div style="height:${v * 0.75}px"><span>${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]}</span></div>`).join('')}</div><div style="height:18px"></div>`) +
+    panel('Plan usage', BANK.plan + ' plan', `<div class="kv"><div>API calls</div><div><div class="bar"><i style="width:42%"></i></div><span class="dim">4.2M of 10M this month</span></div><div>Active customers</div><div><div class="bar"><i style="width:63%"></i></div><span class="dim">6,300 of 10,000</span></div></div>`);
+}
+
+function Account() {
+  const u = S.user; const r = role();
+  return `<div class="grid g2">${panel('Your role', '', `<div class="row"><span class="pill gold" style="font-size:13px">${r.label}</span>${pill('', 'NBF')}</div><p class="dim">${r.summary}</p><div class="kv"><div>Signed in as</div><div class="mono">${u.email}</div><div>Permissions</div><div>${Object.keys(CAP_LABEL).map((c) => pill('ok', CAP_LABEL[c])).join(' ')}</div><div>Second NBF approver</div><div>${pill('gold', 'bypassed — recorded')}</div></div>`)}
+    ${panel('Two-factor', '', `${pill('ok', 'enrolled')} <p class="dim">Authenticator app · 10 recovery codes remaining.</p>${btn('Show recovery codes', 'toast:Recovery codes are shown once, at enrolment (demo).', null, 'small')}`)}</div>` +
+    panel('Where you are signed in', '', table(['Browser', 'Location', 'Signed in', ''], [{ cells: ['Chrome on Windows · this browser', 'Fujairah, AE', 'just now', ''] }, { cells: ['Safari on macOS', 'Dubai, AE', '2 d ago', btn('Sign out', 'toast:That session was signed out.', null, 'small')] }]), '', true);
+}
+
+/* ── shell ─────────────────────────────────────────────────────────────── */
+function Shell() {
+  const route = S.route in SCREENS ? S.route : 'home'; const scr = SCREENS[route]; const r = role();
+  const nav = GROUPS.map((g) => {
+    const items = Object.entries(SCREENS).filter(([, s]) => s.group === g); if (!items.length) return '';
+    return `<div class="nav-group">${g}</div>` + items.map(([k, s]) => { const b = s.badge ? s.badge() : 0; return `<a class="nav-item ${k === route ? 'active' : ''}" href="#${k}"><span>${s.label}</span>${b ? `<span class="pill bad" style="font-size:10px;padding:0 6px">${b}</span>` : ''}</a>`; }).join('');
+  }).join('');
+  return `<div class="shell"><aside><div class="logo"><i>NBF</i><div>${BANK.long}<br><small>Bank portal · by NUQI</small></div></div>${nav}
+    <div class="whoami"><div class="dim">Signed in as</div><b>${esc(S.user.name)}</b><div class="mono" style="color:var(--side-dim)">${esc(S.user.email)}</div>
+      <div style="margin-top:8px"><span class="pill gold">${r.label}</span></div>
+      <div class="scopes">${Object.values(CAP_LABEL).map((c) => `<span>${c}</span>`).join('')}</div>
+      <button class="small" data-action="logout" style="background:transparent;color:#c9d8d1;border-color:#1c3d33;width:100%">Sign out</button></div></aside>
+    <main><div class="topbar"><span class="bank-lock"><span class="pill" style="background:#0f7a631a;color:#0f7a63">●</span>NBF <small>🔒 your bank only</small></span><span class="demo-flag">DEMO · DUMMY DATA</span></div>
+      <div class="content"><div class="page-head"><h1>${scr.title}</h1><p>${scr.lede}</p></div>${scr.render()}</div></main></div>`;
+}
+
+function Login() {
+  if (S.pending) {
+    return `<div class="login-wrap">${brand()}<div class="login-card"><div class="logo" style="color:var(--ink)"><i>NBF</i>NBF <small style="color:var(--dim)">Bank portal</small></div>
+      <h2 style="margin-top:28px">Two-factor check</h2><p class="dim">Enter the 6-digit code from your authenticator app for <b>${esc(S.pending.email)}</b>.</p>
+      <div class="mfa-box">${DEMO_MFA.split('').map((d) => `<input maxlength="1" value="${d}">`).join('')}</div>
+      <div class="note gold">Demo: the code is filled in for you.</div>
+      <div class="row"><button class="primary" data-action="mfa" style="padding:10px 22px">Verify & sign in</button><button data-action="cancel-mfa">Back</button></div></div></div>`;
+  }
+  return `<div class="login-wrap">${brand()}<div class="login-card">
+    <div class="logo" style="color:var(--ink)"><i>NBF</i>NBF <small style="color:var(--dim)">Bank portal</small></div>
+    <h2 style="margin-top:28px">Sign in to NBF’s gold & silver portal</h2><p class="dim" style="margin:0">Demo. <b>Click the demo user</b> to fill in the credentials.</p>
+    <button class="role-card ${S.pick ? 'sel' : ''}" data-action="pick"><b>Bank super admin</b><span>${esc(DEMO_USER.name)} · every permission at NBF</span></button>
+    <label class="field"><span>Email</span><input id="email" autocomplete="off" value="${S.pick ? DEMO_USER.email : ''}" placeholder="you@nbf.bank.demo"></label>
+    <label class="field" style="margin-top:12px"><span>Password</span><input id="password" type="password" value="${S.pick ? DEMO_USER.password : ''}" placeholder="••••••••"></label>
+    <div id="login-err"></div>
+    <button class="primary" data-action="login" style="margin-top:16px;padding:10px">Sign in</button>
+    <p class="hint" style="margin-top:14px">Demo password <span class="mono">${PASSWORD}</span>. A second factor is asked for, as in production. NBF staff only ever see NBF.</p>
+  </div></div>`;
+}
+function brand() {
+  return `<div class="login-brand"><div class="logo"><i>NBF</i>NBF <small>Gold & Silver · by NUQI</small></div><div><h1>NBF’s gold and silver service.<br>Your team, your rules.</h1><p>The bank portal for NBF: your customers and their holdings, payments, pricing, delivery charges and the audit trail — and nothing belonging to any other bank.</p>
+    <div class="feature-list"><div>Every customer’s gold and silver holdings and devices</div><div>Gold, silver and delivery pricing in one place</div><div>NUQI co-approves anything touching money or security</div><div>Full audit trail compliance can export</div></div></div><div style="font-size:12px;color:#5f8076">Demo build · dummy data · nothing leaves this page</div></div>`;
+}
+
+function render() { document.getElementById('app').innerHTML = S.user ? Shell() : Login(); }
+
+/* ── events ────────────────────────────────────────────────────────────── */
+window.addEventListener('hashchange', () => { S.route = location.hash.slice(1) || 'home'; render(); window.scrollTo(0, 0); });
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'user-filter') { S.userFilter = e.target.value; const pos = e.target.selectionStart; render(); const el = document.getElementById('user-filter'); el.focus(); el.setSelectionRange(pos, pos); }
+});
+document.addEventListener('change', (e) => {
+  const t = e.target;
+  if (t.dataset.pay) { S.payDraft.enabled = t.dataset.pay === 'on'; render(); }
+  if (t.dataset.model) { S.payDraft.model = t.dataset.model; render(); }
+  if (t.dataset.hook) { S.payDraft.hooks[t.dataset.hook] = t.checked; render(); }
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !S.user) { e.preventDefault(); S.pending ? act('mfa') : act('login'); } });
+document.addEventListener('click', (e) => { const el = e.target.closest('[data-action]'); if (!el || el.disabled) return; e.preventDefault(); act(el.dataset.action); });
+
+const pctToBp = (v) => Math.round(parseFloat(String(v).replace(/,/g, '')) * 100);
+const aedToFils = (v) => Math.round(parseFloat(String(v).replace(/,/g, '')) * 100);
+
+function act(a) {
+  const [verb, ...rest] = a.split(':'); const arg = rest.join(':');
+  switch (verb) {
+    case 'pick': S.pick = true; render(); break;
+    case 'login': {
+      const email = document.getElementById('email').value.trim(), pw = document.getElementById('password').value;
+      if (email !== DEMO_USER.email || pw !== DEMO_USER.password) { document.getElementById('login-err').innerHTML = '<div class="note bad" style="margin-top:12px">Those credentials are not recognised. Click the demo user above to fill them in.</div>'; return; }
+      S.pending = DEMO_USER; render(); break;
+    }
+    case 'mfa': S.user = S.pending; S.pending = null; audit('user.login', S.user.email, 'Signed in with password + two-factor'); S.route = 'home'; if (location.hash.slice(1) !== 'home') location.hash = 'home'; render(); toast(`Welcome, <b>${esc(S.user.name)}</b> — signed in as <b>Bank super admin</b> at <b>NBF</b>.`); break;
+    case 'cancel-mfa': S.pending = null; render(); break;
+    case 'logout': audit('user.logout', S.user.email, 'Signed out'); S.user = null; S.pick = false; S.payDraft = null; render(); break;
+    case 'go': location.hash = arg; break;
+    case 'toast': toast(esc(arg)); break;
+    case 'customer': S.selectedCustomer = arg; if (S.route !== 'users') location.hash = 'users'; else render(); break;
+    case 'approve': case 'reject': {
+      const ap = S.approvals.find((x) => x.id === arg); if (!ap || !decision(ap).ok) return;
+      if (verb === 'reject') { ap.status = 'rejected'; audit('config.reject', 'NBF', ap.title); toast(`Rejected: ${esc(ap.title)}`); render(); break; }
+      ap.approvedBy.push(S.user.email);
+      if (ap.stage < ap.stages.length - 1) { ap.stage++; audit('config.approve.stage', 'NBF', ap.title + ' — approved at NBF, sent to NUQI'); toast(`✅ <b>Approved for NBF.</b> ${esc(ap.title)}<br><span style="opacity:.75">Now waiting for NUQI.</span>`); }
+      else { ap.status = 'approved'; ap.apply?.(); audit('config.approve', 'NBF', ap.title + ' — applied'); toast(`✅ <b>Approved and applied.</b> ${esc(ap.title)}`); }
+      render(); break;
+    }
+    case 'nuqi-approve': {
+      const ap = S.approvals.find((x) => x.id === arg); if (!ap) return;
+      ap.stage = ap.stages.length; ap.status = 'approved'; ap.apply?.();
+      S.audit.unshift({ at: Date.now(), actor: 'NUQI staff', role: 'NUQI', side: 'nuqi', action: 'config.approve', target: 'NBF', detail: ap.title + ' — co-approved by NUQI and applied' });
+      toast(`✅ <b>NUQI approved — applied.</b> ${esc(ap.title)}<br><span style="opacity:.75">Demo: in production a NUQI operator does this in NUQI’s console.</span>`); render(); break;
+    }
+    case 'session-save': {
+      const p = cfg().sessions; const v = (id) => document.getElementById(id); const idle = +v('sp-idle').value, abs = +v('sp-abs').value;
+      if (!(idle >= 5 && idle <= 15) || !(abs >= 1 && abs <= 12)) return toast('❌ Outside NUQI’s bounds: idle 5–15 min, absolute 1–12 h.');
+      const next = { maxPerUser: v('sp-max').value === 'unlimited' ? 'unlimited' : +v('sp-max').value, atLimit: v('sp-at').value, idleMin: idle, absoluteH: abs, selfSignOut: v('sp-self').checked, revokeOthers: v('sp-others').checked };
+      const diff = Object.keys(next).filter((k) => String(next[k]) !== String(p[k])).map((k) => ['sessions.' + k, String(p[k]), String(next[k])]);
+      if (!diff.length) return toast('Nothing changed yet.');
+      submitChange('Session policy for NBF', 'Session policy', diff, () => Object.assign(p, next)); break;
+    }
+    case 'rates-save': {
+      const c = cfg().commission; const next = JSON.parse(JSON.stringify(c)); let bad = false;
+      document.querySelectorAll('[data-cm]').forEach((el) => {
+        const [m, field] = el.dataset.cm.split('.');
+        if (field === 'feeType') next[m].feeType = el.value;
+        else if (field === 'fee') { const n = parseFloat(el.value); if (!(n >= 0)) bad = true; if (document.querySelector(`[data-cm="${m}.feeType"]`).value === 'flat') { next[m].feeFlat = aedToFils(el.value); next[m].feePct = 0; } else { next[m].feePct = pctToBp(el.value); next[m].feeFlat = 0; } }
+        else { const n = pctToBp(el.value); if (!(n >= 0 && n <= 500)) bad = true; next[m][field] = n; }
+      });
+      if (bad) return toast('❌ Commission must be 0–5.00% and fees must be zero or more.');
+      const diff = [];
+      for (const m of ['gold', 'silver']) for (const k of ['bankBuy', 'bankSell', 'feeType', 'feeFlat', 'feePct']) if (next[m][k] !== c[m][k]) diff.push([`${m}.${k}`, String(c[m][k]), String(next[m][k])]);
+      if (!diff.length) return toast('Nothing changed yet.');
+      submitChange('Gold & silver rates for NBF', 'Commission', diff, () => Object.assign(c, next)); break;
+    }
+    case 'delivery-save': {
+      const d = cfg().delivery; const v = (id) => document.getElementById(id).value;
+      const next = { ...d, vatPct: parseFloat(v('dl-vat')), mintingPerGram: aedToFils(v('dl-mint')), transactionFee: aedToFils(v('dl-tx')), deliveryCharge: aedToFils(v('dl-del')) };
+      if (!(next.vatPct >= 0 && next.vatPct <= 100) || [next.mintingPerGram, next.transactionFee, next.deliveryCharge].some((x) => !(x >= 0))) return toast('❌ VAT must be 0–100% and every charge zero or more.');
+      const labels = { vatPct: 'VAT %', mintingPerGram: 'Minting (fils/g)', transactionFee: 'Transaction fee (fils)', deliveryCharge: 'Delivery (fils)' };
+      const diff = Object.keys(labels).filter((k) => next[k] !== d[k]).map((k) => ['delivery.' + k, String(d[k]), String(next[k])]);
+      if (!diff.length) return toast('Nothing changed yet.');
+      submitChange('Physical delivery charges for NBF', 'Commission', diff, () => Object.assign(d, next)); break;
+    }
+    case 'pay-save': {
+      const cur = cfg().payments, d = S.payDraft; if (missingOps(d).length) return;
+      const diff = []; if (cur.enabled !== d.enabled) diff.push(['payments.mode', cur.enabled ? 'bank' : 'platform', d.enabled ? 'bank' : 'platform']);
+      if (cur.model !== d.model) diff.push(['payments.model', cur.model, d.model]);
+      OPS.forEach((op) => cur.hooks[op] !== d.hooks[op] && diff.push(['payments.' + op, cur.hooks[op] ? 'configured' : 'null', d.hooks[op] ? 'configured' : 'null']));
+      if (!diff.length) return toast('Nothing changed yet.');
+      const snap = JSON.parse(JSON.stringify(d));
+      submitChange('Payment security for NBF', 'Payment security', diff, () => (S.cfg.payments = snap), { sensitive: true }); S.payDraft = null; break;
+    }
+    case 'int-save': {
+      const i = cfg().integrations; const next = { ...i }; document.querySelectorAll('[data-int]').forEach((x) => (next[x.dataset.int] = x.value));
+      const diff = Object.keys(next).filter((k) => next[k] !== i[k]).map((k) => ['integrations.' + k + '.mode', i[k], next[k]]);
+      if (!diff.length) return toast('Nothing changed yet.');
+      submitChange('Integrations for NBF', 'Integrations', diff, () => Object.assign(i, next), { sensitive: true }); break;
+    }
+    case 'limits-save': {
+      const l = cfg().limits; const num = (id) => Math.round(parseFloat(document.getElementById(id).value.replace(/,/g, '')) * 100);
+      const next = { min: num('lim-min'), max: num('lim-max'), dailyBuy: num('lim-db'), dailySell: num('lim-ds') };
+      if (Object.values(next).some((x) => !(x > 0))) return toast('❌ Every limit must be a positive amount.');
+      if (next.min >= next.max) return toast('❌ The smallest order must be below the largest.');
+      const diff = Object.keys(next).filter((k) => next[k] !== l[k]).map((k) => ['limits.' + k, aed(l[k] / 100), aed(next[k] / 100)]);
+      if (!diff.length) return toast('Nothing changed yet.');
+      submitChange('Order limits for NBF', 'Order limits', diff, () => Object.assign(l, next), { sensitive: true }); break;
+    }
+    case 'rotate': { const cl = cfg().clients[+arg]; cl.key = 'ck_…' + Math.floor(1000 + Math.random() * 8999); cl.rotated = Date.now(); audit('client.key.rotate', 'NBF', cl.id + ' — new key issued, old key valid 24 h'); modal(`<h3>New key for ${cl.id}</h3><p class="dim">Shown once. Copy it into NBF’s secret store now.</p><pre class="mono" style="background:#f3f5f4;padding:12px;border-radius:8px">nuqi_live_demo_${Math.random().toString(36).slice(2, 14)}${Math.random().toString(36).slice(2, 14)}</pre><div class="note info">The old key keeps working for 24 hours.</div><div class="row"><span class="spacer"></span><button class="primary" data-action="close">I have stored it</button></div>`); render(); break; }
+    case 'revoke': { const s = SESSIONS.find((x) => x.id === arg); s.revoked = true; s.live = false; audit('session.revoke', s.customer, s.id + ' (' + s.device + ') ended'); toast(`Session on <b>${esc(s.device)}</b> ended. The device is refused on its next request.`); render(); break; }
+    case 'revokeall': { let n = 0; SESSIONS.forEach((s) => { if (s.customer === arg && s.live) { s.live = false; s.revoked = true; n++; } }); audit('session.revoke_all', arg, n + ' sessions ended'); toast(`${n} session${n === 1 ? '' : 's'} ended for <span class="mono">${esc(arg)}</span>.`); render(); break; }
+    case 'revokeall-ask': modal(`<h3>Sign a customer out everywhere</h3><p class="dim">Ends every session for one customer — for a lost phone or suspected fraud.</p><label class="field"><span>NBF customer reference</span><input id="ra-cust" value="NBF-CUST-100231"></label><div class="row" style="margin-top:14px"><span class="spacer"></span><button data-action="close">Cancel</button><button class="danger" data-action="revokeall-go">End all sessions</button></div>`); break;
+    case 'revokeall-go': { const c = document.getElementById('ra-cust').value.trim(); close(); act('revokeall:' + c); break; }
+    case 'block': case 'unblock': { const c = CUSTOMERS.find((x) => x.ref === arg); c.status = verb === 'block' ? 'blocked' : 'active'; c.kyc = verb === 'block' ? 'review' : 'passed'; audit('customer.' + verb, arg, verb === 'block' ? 'Trading blocked; holdings kept safe' : 'Trading unblocked'); toast(verb === 'block' ? `Trading blocked for <span class="mono">${esc(arg)}</span>. Their holdings are untouched.` : `Trading unblocked for <span class="mono">${esc(arg)}</span>.`); render(); break; }
+    case 'replay': { const w = WEBHOOKS.find((x) => x.id === arg); w.status = 'delivered'; w.attempts++; audit('webhook.replay', 'NBF', w.id + ' replayed and delivered'); toast('Replayed and delivered (demo).'); render(); break; }
+    case 'resolve': { const p = PAYOPS.find((x) => x.order === arg && x.status === 'abandoned'); p.status = 'succeeded'; p.err = 'resolved manually by ' + S.user.email; p.ref = 'MANUAL'; const o = ORDERS.find((x) => x.id === arg); if (o) o.payment = 'completed'; audit('payment.resolve', arg, 'Capture confirmed and marked resolved'); toast('Marked resolved and recorded in the audit log.'); render(); break; }
+    case 'export': audit('audit.export', 'NBF', 'Exported the audit log (CSV)'); toast('Audit log exported as CSV (demo) — and the export itself is now in the log.'); render(); break;
+    case 'invite': modal(`<h3>Invite a colleague</h3><p class="dim">They receive an email to set a password and enrol two-factor.</p><label class="field"><span>Work email</span><input id="inv-email" value="new.colleague@nbf.bank.demo"></label><label class="field" style="margin-top:10px"><span>Role</span><select id="inv-role">${['bank_ops', 'bank_compliance', 'bank_viewer', 'bank_admin'].map((r) => `<option value="${r}">${ROLES[r].label}</option>`).join('')}</select></label><div class="row" style="margin-top:14px"><span class="spacer"></span><button data-action="close">Cancel</button><button class="primary" data-action="do-invite">Send invitation</button></div>`); break;
+    case 'do-invite': { const email = document.getElementById('inv-email').value.trim(); const r = document.getElementById('inv-role').value; if (!email.endsWith('@nbf.bank.demo')) { toast('❌ Only addresses at NBF’s own domain can be invited.'); return; } S.team.push({ role: r, name: email.split('@')[0], email, mfaOn: false, lastSeen: 0, status: 'invited' }); audit('team.invite', 'NBF', `Invited ${email} as ${ROLES[r].label}`); close(); toast(`Invitation sent to <span class="mono">${esc(email)}</span>.`); render(); break; }
+    case 'disable': { const m = S.team.find((x) => x.email === arg); m.status = 'disabled'; audit('team.disable', 'NBF', `Disabled ${arg} — their sessions ended`); toast(`<span class="mono">${esc(arg)}</span> disabled.`); render(); break; }
+    case 'close': close(); break;
+  }
+}
+function modal(html) { document.getElementById('overlay').innerHTML = `<div class="modal-bg"><div class="modal">${html}</div></div>`; }
+function close() { document.getElementById('overlay').innerHTML = ''; }
+document.getElementById('overlay').addEventListener('click', (e) => { if (e.target.classList.contains('modal-bg')) close(); });
+
+S.route = location.hash.slice(1) || 'home';
+render();
+</script>
+</body>
+</html>
