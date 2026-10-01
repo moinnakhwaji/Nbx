@@ -40,10 +40,10 @@ export default function Team() {
           }))} />
       </Panel>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-[14px]">
         <Panel title="Roles at NBF">
           <DataTable keyField="key" cols={['Role', 'Can']}
-            rows={Object.entries(ROLES).map(([key, r]) => ({ key, cells: [r.label, <span className="text-xs text-[#66736e]">{r.summary}</span>] }))} />
+            rows={Object.entries(ROLES).map(([key, r]) => ({ key, cells: [r.label, r.summary] }))} />
         </Panel>
         <Panel title="Rules">
           <ul className="text-sm text-[#14201c] grid gap-2 ml-5">
